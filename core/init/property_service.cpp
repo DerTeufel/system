@@ -463,6 +463,19 @@ static void load_properties(char *data, const char *filter)
                     if (strcmp(key, filter)) continue;
                 }
             }
+			
+			// add by xiaodong.huang, for property reference. start
+	    	if (!strncmp(value, "@", 1)) {
+	            value ++;        
+	            char *tmp = strchr(value, '@');
+	            if (tmp != 0) {
+	                *tmp = 0;
+	            	__system_property_get(value, value);
+	            } else {
+	                value --;
+	            }
+	    	}
+	        // end
 
             property_set(key, value);
         }
@@ -615,6 +628,7 @@ void load_recovery_id_prop() {
 }
 
 void load_all_props() {
+    load_properties_from_file("/custom/customprop/custom.prop",NULL); //add by liliang.bao 20141020
     load_properties_from_file(PROP_PATH_SYSTEM_BUILD, NULL);
     load_properties_from_file(PROP_PATH_VENDOR_BUILD, NULL);
     load_properties_from_file(PROP_PATH_FACTORY, "ro.*");
@@ -625,6 +639,7 @@ void load_all_props() {
     load_persistent_properties();
 
     load_recovery_id_prop();
+	load_properties_from_file("/custom/customprop/custom.prop",NULL); //add by liliang.bao 20141020
 }
 
 void start_property_service() {

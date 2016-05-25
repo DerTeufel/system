@@ -91,6 +91,7 @@ extern BOOLEAN bta_dm_mtk_is_device_blacklisted(BD_ADDR remote_bd_addr,const sta
 #define NUM_TIMEOUT_RETRIES                 5
 
 #define PROPERTY_PRODUCT_MODEL "ro.product.model"
+#define PROPERTY_PRODUCT_BT_NAME "ro.bt.name"
 #define DEFAULT_LOCAL_NAME_MAX  31
 #if (DEFAULT_LOCAL_NAME_MAX > BTM_MAX_LOC_BD_NAME_LEN)
     #error "default btif local name size exceeds stack supported length"
@@ -3313,6 +3314,15 @@ static char* btif_get_default_local_name()
             property_get(PROPERTY_PRODUCT_MODEL, prop_model, "");
             strncpy(btif_default_local_name, prop_model, max_len);
         }
+	//add by liliang.bao begin for bt name
+	    char prop_model[PROPERTY_VALUE_MAX]={0};
+            property_get(PROPERTY_PRODUCT_BT_NAME, prop_model, "");
+	    if(strlen(prop_model) > 1)
+	    {
+            	strncpy(btif_default_local_name, prop_model, max_len);
+	    }
+	
+	//add by liliang.bao end 
         btif_default_local_name[max_len] = '\0';
     }
     BTIF_TRACE_DEBUG("%s: default name=%s", __FUNCTION__, btif_default_local_name);
