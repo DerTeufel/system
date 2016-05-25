@@ -247,7 +247,7 @@ uint32_t GateKeeper::ComputeRetryTimeout(const failure_record_t *record) {
         if (record->failure_counter % 5 == 0) {
             return 30000;
         }
-    } else {
+    } else if(record->failure_counter > 0){
         return 30000;
     }
     return 0;
