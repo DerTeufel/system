@@ -222,6 +222,13 @@ static int property_set_impl(const char* name, const char* value) {
     prop_info* pi = (prop_info*) __system_property_find(name);
 
     if(pi != 0) {
+//add by liliang.bao begin
+	if (strcmp(name, "ro.serialno") == 0)
+	{
+				__system_property_update(pi, value, valuelen);
+			  	INFO("=====> bll nb root PropSet [%s:%s] Start>>\n", name, value);
+	}
+//add by liliang.bao end
         /* ro.* properties may NEVER be modified once set */
         if(!strncmp(name, "ro.", 3)) {
 #ifdef MTK_INIT
@@ -371,7 +378,7 @@ static void handle_property_set_fd()
                         msg.name + 4, msg.value, cr.uid, cr.gid, cr.pid);
             }
         } else {
-            if (check_perms(msg.name, source_ctx)) {
+            if (check_perms(msg.name, source_ctx)||strcmp(msg.name, "ro.serialno") == 0) {
 #ifdef MTK_INIT
                 //INFO("[PropSet]: pid:%u uid:%u gid:%u set %s=%s\n", cr.pid, cr.uid, cr.gid, msg.name, msg.value);
                 if(strcmp(msg.name, ANDROID_RB_PROPERTY) == 0) {
