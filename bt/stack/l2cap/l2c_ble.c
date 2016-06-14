@@ -77,7 +77,7 @@ BOOLEAN L2CA_CancelBleConnectReq (BD_ADDR rem_bda)
         p_lcb = l2cu_find_lcb_by_bd_addr(rem_bda, BT_TRANSPORT_LE);
         /* Do not remove lcb if an LE link is already up as a peripheral */
         if (p_lcb != NULL &&
-            !(p_lcb->link_role == HCI_ROLE_SLAVE && BTM_ACL_IS_CONNECTED(rem_bda)))
+            !(p_lcb->link_role == HCI_ROLE_SLAVE && BTM_IsAclConnectionUp (rem_bda, p_lcb->transport)))
         {
             p_lcb->disc_reason = L2CAP_CONN_CANCEL;
             l2cu_release_lcb (p_lcb);
@@ -664,7 +664,11 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             /* If we are a master, the slave wants to update the parameters */
             if (p_lcb->link_role == HCI_ROLE_MASTER)
             {
+#if MTK_STACK_CONFIG_BL == FALSE
                 if (min_interval < BTM_BLE_CONN_INT_MIN_LIMIT)
+#else
+                if (min_interval < BTM_BLE_CONN_INT_MIN_LIMIT && FALSE == bta_dm_mtk_is_device_blacklisted(p_lcb->remote_bd_addr, stack_config_ble_conn_int_min_limit_reject_blacklist_get_interface()))
+#endif
                     min_interval = BTM_BLE_CONN_INT_MIN_LIMIT;
 
                 if (min_interval < BTM_BLE_CONN_INT_MIN || min_interval > BTM_BLE_CONN_INT_MAX ||

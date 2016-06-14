@@ -27,6 +27,7 @@
 #define CONFIG_MTK_ROLE_SWITCH_BLACKLIST_SECTION "MtkRoleSwitchBlacklist"
 #define CONFIG_MTK_SNIFF_SUBRATING_BLACKLIST_SECTION "MtkSniffSubratingBlacklist"
 #define CONFIG_MTK_HOGP_CONN_UPDATE_BLACKLIST_SECTION "MtkHogpConnUpdateBlacklist"
+#define CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_REJECT_BLACKLIST_SECTION "MtkBleConnIntMinLimitRejectBlacklist"
 #define CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_BLACKLIST_SECTION "MtkBleConnIntMinLimitBlacklist"
 #define CONFIG_MTK_BLE_CONN_TIMEOUT_BLACKLIST_SECTION "MtkBleConnTimeoutBlacklist"
 #define CONFIG_MTK_AVRCP_15_BACK_TO_13_BLACKLIST_SECTION "MtkAvrcp15BackTo13Blacklist"
@@ -61,6 +62,14 @@ config_t *config_new_empty(void);
 // longer required. |filename| must not be NULL and must point to a readable
 // file on the filesystem.
 config_t *config_new(const char *filename);
+
+// Clones |src|, including all of it's sections, keys, and values.
+// Returns a new config which is a copy and separated from the original;
+// changes to the new config are not reflected in any way in the original.
+//
+// |src| must not be NULL
+// This function will not return NULL.
+config_t *config_clone(config_t *src);
 
 #if MTK_STACK_CONFIG == TRUE
 bool config_override(config_t *config, const char *filename);
