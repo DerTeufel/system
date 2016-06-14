@@ -49,6 +49,7 @@ typedef struct {
 const stack_config_blacklist_t *stack_config_role_switch_blacklist_get_interface();
 const stack_config_blacklist_t *stack_config_sniff_subrating_blacklist_get_interface();
 const stack_config_blacklist_t *stack_config_hogp_conn_update_blacklist_get_interface();
+const stack_config_blacklist_t *stack_config_ble_conn_int_min_limit_reject_blacklist_get_interface();
 const stack_config_blacklist_t *stack_config_ble_conn_int_min_limit_blacklist_get_interface();
 const stack_config_blacklist_t *stack_config_ble_conn_timeout_blacklist_get_interface();
 const stack_config_blacklist_t *stack_config_avrcp_15_back_to_13_blacklist_get_interface();

@@ -265,6 +265,18 @@ static const char *get_hogp_conn_update_partial_name_blacklist(void) {
   return config_get_string(config, CONFIG_MTK_HOGP_CONN_UPDATE_BLACKLIST_SECTION, BLACKLIST_PARTIAL_NAME_KEY, NULL);
 }
 
+static const char *get_ble_conn_int_min_limit_reject_addr_blacklist(void) {
+  return config_get_string(config, CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_REJECT_BLACKLIST_SECTION, BLACKLIST_ADDR_KEY, NULL);
+}
+
+static const char *get_ble_conn_int_min_limit_reject_name_blacklist(void) {
+  return config_get_string(config, CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_REJECT_BLACKLIST_SECTION, BLACKLIST_NAME_KEY, NULL);
+}
+
+static const char *get_ble_conn_int_min_limit_reject_partial_name_blacklist(void) {
+  return config_get_string(config, CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_REJECT_BLACKLIST_SECTION, BLACKLIST_PARTIAL_NAME_KEY, NULL);
+}
+
 static const char *get_ble_conn_int_min_limit_addr_blacklist(void) {
   return config_get_string(config, CONFIG_MTK_BLE_CONN_INT_MIN_LIMIT_BLACKLIST_SECTION, BLACKLIST_ADDR_KEY, NULL);
 }
@@ -361,6 +373,12 @@ const stack_config_blacklist_t hogp_conn_update_blacklist_interface = {
   get_hogp_conn_update_partial_name_blacklist
 };
 
+const stack_config_blacklist_t ble_conn_int_min_limit_reject_blacklist_interface = {
+  get_ble_conn_int_min_limit_reject_addr_blacklist,
+  get_ble_conn_int_min_limit_reject_name_blacklist,
+  get_ble_conn_int_min_limit_reject_partial_name_blacklist
+};
+
 const stack_config_blacklist_t ble_conn_int_min_limit_blacklist_interface = {
   get_ble_conn_int_min_limit_addr_blacklist,
   get_ble_conn_int_min_limit_name_blacklist,
@@ -455,6 +473,10 @@ const stack_config_blacklist_t *stack_config_sniff_subrating_blacklist_get_inter
 
 const stack_config_blacklist_t *stack_config_hogp_conn_update_blacklist_get_interface() {
   return &hogp_conn_update_blacklist_interface;
+}
+
+const stack_config_blacklist_t *stack_config_ble_conn_int_min_limit_reject_blacklist_get_interface() {
+  return &ble_conn_int_min_limit_reject_blacklist_interface;
 }
 
 const stack_config_blacklist_t *stack_config_ble_conn_int_min_limit_blacklist_get_interface() {
