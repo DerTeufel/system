@@ -1337,7 +1337,11 @@ void bta_av_setconfig_rsp (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
             /* if SBC is used by the SNK as INT, discover req is not sent in bta_av_config_ind.
                        * call disc_res now */
            /* this is called in A2DP SRC path only, In case of SINK we don't need it  */
-            if (local_sep == AVDT_TSEP_SRC)
+            if ((local_sep == AVDT_TSEP_SRC)
+#if (MTK_COMMON == TRUE)
+                    && (p_scb->num_disc_snks == 0)
+#endif
+                    )
                 p_scb->p_cos->disc_res(p_scb->hndl, num, num, 0, p_scb->peer_addr,
                                                       UUID_SERVCLASS_AUDIO_SOURCE);
         }
@@ -1872,7 +1876,21 @@ void bta_av_open_failed (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
     }
     else
     {
+#if (MTK_COMMON == TRUE)
+	UINT16 result = AVDT_DisconnectReq(p_scb->peer_addr, bta_av_dt_cback[p_scb->hdi]);
+        if (result == AVDT_BAD_PARAMS)
+        {
+            APPL_TRACE_WARNING("ccb is null, notify bta and btif to change state");
+            tBTA_AV_REJECT reject;
+            bdcpy(reject.bd_addr, p_scb->peer_addr);
+            reject.hndl = p_scb->hndl;
+            (*bta_av_cb.p_cback)(BTA_AV_REJECT_EVT, (tBTA_AV *) &reject);
+
+            bta_av_ssm_execute(p_scb, BTA_AV_AVDT_DISCONNECT_EVT, NULL);
+        }
+#else
         AVDT_DisconnectReq(p_scb->peer_addr, bta_av_dt_cback[p_scb->hdi]);
+#endif
     }
 }
 
@@ -2622,6 +2640,15 @@ void bta_av_str_closed (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
             bta_av_cleanup(p_scb, p_data);
             (*bta_av_cb.p_cback)(event, &data);
         }
+
+#if (MTK_STACK_CONFIG_BL == TRUE)
+        if(bta_dm_mtk_is_device_blacklisted(p_scb->peer_addr, stack_config_avdpt_close_sigchan_blacklist_get_interface()))
+        {
+            APPL_TRACE_DEBUG("Close signaling channel while peer close data channel ");
+            AVDT_ULCloseReq(p_scb->peer_addr);
+        }
+#endif
+
     }
 }
 

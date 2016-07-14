@@ -1644,6 +1644,9 @@ static void  cleanup( void )
         btif_disable_service(BTA_HFP_SERVICE_ID);
         bt_hf_callbacks = NULL;
     }
+#ifdef MTK_COMMON
+    btif_queue_release();
+#endif
 }
 
 /*******************************************************************************

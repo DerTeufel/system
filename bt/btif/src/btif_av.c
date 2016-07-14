@@ -1263,6 +1263,9 @@ static void cleanup(void)
     /* Also shut down the AV state machine */
     btif_sm_shutdown(btif_av_cb.sm_handle);
     btif_av_cb.sm_handle = NULL;
+#ifdef MTK_COMMON
+    btif_queue_release();
+#endif
 }
 
 static void cleanup_src(void) {

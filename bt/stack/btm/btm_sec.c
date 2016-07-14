@@ -904,6 +904,11 @@ void BTM_PINCodeReply (BD_ADDR bd_addr, UINT8 res, UINT8 pin_len, UINT8 *p_pin, 
     p_dev_rec->sec_flags   |= BTM_SEC_LINK_KEY_AUTHED;
     if (pin_len >= 16) {
         p_dev_rec->sec_flags |= BTM_SEC_16_DIGIT_PIN_AUTHED;
+#if (MTK_COMMON == TRUE)
+        btm_cb.pin_code_len = pin_len;
+        p_dev_rec->pin_code_length = pin_len;
+        memcpy(btm_cb.pin_code,p_pin,pin_len);
+#endif
     }
 
     if ( (btm_cb.pairing_flags & BTM_PAIR_FLAGS_WE_STARTED_DD)
@@ -2268,8 +2273,7 @@ tBTM_STATUS btm_sec_l2cap_access_req (BD_ADDR bd_addr, UINT16 psm, UINT16 handle
              btm_cb.security_mode == BTM_SEC_MODE_NONE ||
              btm_cb.security_mode == BTM_SEC_MODE_SERVICE ||
              btm_cb.security_mode == BTM_SEC_MODE_LINK) ||
-            (BTM_SM4_KNOWN == p_dev_rec->sm4) || (BTM_SEC_IS_SM4(p_dev_rec->sm4) &&
-            (btm_sec_is_upgrade_possible(p_dev_rec, is_originator) == FALSE)))
+            (BTM_SM4_KNOWN == p_dev_rec->sm4))
         {
             /* legacy mode - local is legacy or local is lisbon/peer is legacy
              * or SM4 with no possibility of link key upgrade */
@@ -5426,12 +5430,7 @@ static tBTM_STATUS btm_sec_execute_procedure (tBTM_SEC_DEV_REC *p_dev_rec)
                             & BTM_SEC_IN_MIN_16_DIGIT_PIN)))) {
             p_dev_rec->sec_flags &= ~(BTM_SEC_LINK_KEY_KNOWN | BTM_SEC_LINK_KEY_AUTHED
                     | BTM_SEC_AUTHENTICATED);
-#if (MTK_COMMON == TRUE)
-            BTM_TRACE_EVENT ("Security Manager: required BTM_SEC_IN_MIN_16_DIGIT_PIN, sec_flags=0x%x, sec_state=%d",
-                             p_dev_rec->sec_flags, p_dev_rec->sec_state);
 
-            BTM_DeleteStoredLinkKey (p_dev_rec->bd_addr, NULL);
-#endif
         }
 
         if (!btm_sec_start_authentication (p_dev_rec))

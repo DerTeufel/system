@@ -22,6 +22,7 @@
  *  machine.
  *
  ******************************************************************************/
+#include <assert.h>
 
 #include "bt_target.h"
 #include "bt_types.h"
@@ -3613,7 +3614,11 @@ static void bta_dm_rm_cback(tBTA_SYS_CONN_STATUS status, UINT8 id, UINT8 app_id,
         APPL_TRACE_WARNING("bta_dm_rm_cback:%d, status:%d", bta_dm_cb.cur_av_count, status);
     }
 
-    bta_dm_adjust_roles(FALSE);
+    /* Don't adjust roles for each busy/idle state transition to avoid
+       excessive switch requests when individual profile busy/idle status
+       changes */
+    if ((status != BTA_SYS_CONN_BUSY) && (status != BTA_SYS_CONN_IDLE))
+        bta_dm_adjust_roles(FALSE);
 }
 
 /*******************************************************************************
@@ -3728,7 +3733,7 @@ static void bta_dm_adjust_roles(BOOLEAN delay_role_switch)
                 }
 
                 if((bta_dm_cb.device_list.peer_device[i].pref_role == BTA_MASTER_ROLE_ONLY)
-                    || (bta_dm_cb.device_list.count > 1))
+                    || (br_count > 1))
                 {
 
                 /* Initiating immediate role switch with certain remote devices
@@ -3737,7 +3742,8 @@ static void bta_dm_adjust_roles(BOOLEAN delay_role_switch)
                   versions are stored in a blacklist and role switch with these devices are
                   delayed to avoid the collision with link encryption setup */
 
-                    if (delay_role_switch == FALSE)
+                    if (bta_dm_cb.device_list.peer_device[i].pref_role != BTA_SLAVE_ROLE_ONLY &&
+                            delay_role_switch == FALSE)
                     {
                         BTM_SwitchRole (bta_dm_cb.device_list.peer_device[i].peer_bdaddr,
                                         HCI_ROLE_MASTER, NULL);
@@ -3815,6 +3821,34 @@ static void bta_dm_bond_cancel_complete_cback(tBTM_STATUS result)
     {
         bta_dm_cb.p_sec_cback(BTA_DM_BOND_CANCEL_CMPL_EVT, &sec_event);
     }
+}
+
+/*******************************************************************************
+**
+** Function         find_utf8_char_boundary
+**
+** Description      This function checks a UTF8 string |utf8str| starting at
+**                  |offset|, moving backwards and returns the offset of the
+**                  next valid UTF8 character boundary found.
+**
+** Returns          Offset of UTF8 character boundary
+**
+*******************************************************************************/
+static size_t find_utf8_char_boundary(const char *utf8str, size_t offset)
+{
+    assert(utf8str);
+    assert(offset > 0);
+
+    while (--offset)
+    {
+        uint8_t ch = (uint8_t)utf8str[offset];
+        if ((ch & 0x80) == 0x00) // ASCII
+            return offset + 1;
+        if ((ch & 0xC0) == 0xC0) // Multi-byte sequence start
+            return offset;
+    }
+
+    return 0;
 }
 
 /*******************************************************************************
@@ -3938,14 +3972,15 @@ static void bta_dm_set_eir (char *local_name)
         } else
 #endif
         /* if UUID doesn't fit remaing space, shorten local name */
-        if ( local_name_len > (free_eir_length - 4 - num_uuid*LEN_UUID_16))
+        if (local_name_len > (free_eir_length - 4 - num_uuid*LEN_UUID_16))
         {
-            APPL_TRACE_WARNING("BTA EIR: local name is shortened");
-            local_name_len = p_bta_dm_eir_cfg->bta_dm_eir_min_name_len;
+            local_name_len = find_utf8_char_boundary(local_name,
+                p_bta_dm_eir_cfg->bta_dm_eir_min_name_len);
+            APPL_TRACE_WARNING("%s local name is shortened (%d)", __func__, local_name_len);
             data_type = BTM_EIR_SHORTENED_LOCAL_NAME_TYPE;
-        }
-        else
+        } else {
             data_type = BTM_EIR_COMPLETE_LOCAL_NAME_TYPE;
+        }
     }
 
     UINT8_TO_STREAM(p, local_name_len + 1);
