@@ -373,15 +373,21 @@ BOOLEAN bta_ag_sdp_find_attr(tBTA_AG_SCB *p_scb, tBTA_SERVICE_MASK service)
                 if (p_scb->peer_features == 0)
                     p_scb->peer_features = p_attr->attr_value.v.u16;
 
+                /* Check if support remote volume control and set the property. */
+                if ((p_scb->peer_features & BTA_AG_PEER_FEAT_VOL) == 0) {
+                    property_set("persist.service.bdroid.vol", "0");
+                } else {
+                    property_set("persist.service.bdroid.vol", "1");
+                }
+
 #if (MTK_COMMON == TRUE)
                 /* From the spec, HF indicator bit not be defined at 1.5, some device may
                    not handle this, so remove it. */
                 if (p_scb->peer_version <= HFP_VERSION_1_5) {
-                    p_scb->features = p_scb->features & 0x3FF;
+                    p_scb->features = p_scb->features & (~BTA_AG_FEAT_HF_IND);
                     APPL_TRACE_DEBUG("remove hf indicator. ");
                 }
 #endif
-
             }
         }
         else    /* HSP */
@@ -389,10 +395,14 @@ BOOLEAN bta_ag_sdp_find_attr(tBTA_AG_SCB *p_scb, tBTA_SERVICE_MASK service)
             if ((p_attr = SDP_FindAttributeInRec(p_rec, ATTR_ID_REMOTE_AUDIO_VOLUME_CONTROL)) != NULL)
             {
                 /* Remote volume control of HSP */
-                if (p_attr->attr_value.v.u8)
+                if (p_attr->attr_value.v.u8) {
                     p_scb->peer_features |= BTA_AG_PEER_FEAT_VOL;
-                else
+                    /* set the proptery to indicate peer device support volume control. */
+                    property_set("persist.service.bdroid.vol", "1");
+                }  else {
                     p_scb->peer_features &= ~BTA_AG_PEER_FEAT_VOL;
+                    property_set("persist.service.bdroid.vol", "0");
+                }
             }
 
         }

@@ -336,6 +336,15 @@ static const char *get_a2dp_delay_start_cmd_blacklist(void) {
 static const char *get_hfp_15_eSCO_mSBC_name_blacklist(void) {
   return config_get_string(config, CONFIG_MTK_HFP_15_ESCO_MSBC_BLACKLIST_SECTION, BLACKLIST_NAME_KEY, "");
 }
+
+static const char *get_avdtp_close_sigchan_addr_blacklist(void) {
+  return config_get_string(config, CONFIG_MTK_AVDTP_CLOSE_SIGCHAN_BLACKLIST_SECTION, BLACKLIST_ADDR_KEY, "");
+}
+
+static const char *get_avdtp_close_sigchan_name_blacklist(void) {
+  return config_get_string(config, CONFIG_MTK_AVDTP_CLOSE_SIGCHAN_BLACKLIST_SECTION, BLACKLIST_NAME_KEY, "");
+}
+
 static const char *get_hid_disable_sdp_name_blacklist(void) {
   return config_get_string(config, CONFIG_MTK_HID_DISABLE_SDP_BLACKLIST_SECTION, BLACKLIST_NAME_KEY, "");
 }
@@ -433,6 +442,12 @@ const stack_config_blacklist_t a2dp_delay_start_cmd_blacklist_interface = {
   NULL
 };
 
+const stack_config_blacklist_t avdtp_close_sigchan_blacklist_interface = {
+  get_avdtp_close_sigchan_addr_blacklist,
+  get_avdtp_close_sigchan_name_blacklist,
+  NULL
+};
+
 const stack_config_blacklist_t hfp_15_eSCO_mSBC_blacklist_interface = {
   NULL,
   get_hfp_15_eSCO_mSBC_name_blacklist,
@@ -513,6 +528,10 @@ const stack_config_blacklist_t *stack_config_song_position_blacklist_get_interfa
 
 const stack_config_blacklist_t *stack_config_a2dp_delay_start_cmd_blacklist_get_interface() {
   return &a2dp_delay_start_cmd_blacklist_interface;
+}
+
+const stack_config_blacklist_t *stack_config_avdpt_close_sigchan_blacklist_get_interface() {
+  return &avdtp_close_sigchan_blacklist_interface;
 }
 
 const stack_config_blacklist_t *stack_config_hfp_15_eSCO_MSBC_blacklist_get_interface() {

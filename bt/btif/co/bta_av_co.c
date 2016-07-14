@@ -933,6 +933,12 @@ void bta_av_co_audio_setconfig(tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type,
                     memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
                     recfg_needed = FALSE;
                 }
+#if (MTK_COMMON == TRUE)
+                /* codec_cfg_supported is true, which means remote set_configuration parameters can match local capability.
+                    So it is reasonable to save the configure param as current codec_cfg for further codec setup.
+                    Still keep recfg_needed as the original value to keep the possiblity to do reconfiguration.  */
+                memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
+#endif
                 break;
 #if (MTK_A2DP_SRC_APTX_CODEC == TRUE)
             case NON_A2DP_MEDIA_CT:
@@ -946,6 +952,11 @@ void bta_av_co_audio_setconfig(tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type,
                 }
                 bta_av_co_cb.codec_cfg_setconfig.id = NON_A2DP_MEDIA_CT;
                 memcpy(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info, AVDT_CODEC_SIZE);
+
+                /* codec_cfg_supported is true, which means remote set_configuration parameters can match local capability.
+                    So it is reasonable to save the configure param as current codec_cfg for further codec setup.
+                    Still keep recfg_needed as the original value to keep the possiblity to do reconfiguration.  */
+                memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
                 break;
 #endif
 #if (MTK_A2DP_SRC_AAC_CODEC == TRUE)
@@ -953,6 +964,11 @@ void bta_av_co_audio_setconfig(tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type,
                 {
                     bta_av_co_cb.codec_cfg_setconfig.id = A2D_MEDIA_CT_M24;
                     memcpy(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info, AVDT_CODEC_SIZE);
+
+                    /* codec_cfg_supported is true, which means remote set_configuration parameters can match local capability.
+                        So it is reasonable to save the configure param as current codec_cfg for further codec setup.
+                        Still keep recfg_needed as the original value to keep the possiblity to do reconfiguration.  */
+                    memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
                     break;
                 }
 #endif
@@ -1509,7 +1525,8 @@ static BOOLEAN bta_av_co_audio_peer_supports_codec(tBTA_AV_CO_PEER *p_peer, UINT
     APPL_TRACE_ERROR("bta_av_co_audio_peer_supports_codec: no available aptX sink" );
 #if (MTK_A2DP_SRC_AAC_CODEC == TRUE)
     bta_av_co_cb.codec_cfg.id = BTIF_AV_CODEC_AAC;  // if AAC is enabled and we cannot find APTX codec in remote device
-    if (A2D_BldAACInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&btif_av_aac_default_config, bta_av_co_cb.codec_cfg.info) != A2D_SUCCESS)
+    if (bta_av_co_cb.codec_cfg_setconfig.id == BTIF_AV_CODEC_NONE &&
+            A2D_BldAACInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&btif_av_aac_default_config, bta_av_co_cb.codec_cfg.info) != A2D_SUCCESS)
     {
         APPL_TRACE_ERROR("bta_av_co_audio_peer_supports_codec A2D_BldSbcInfo failed");
     }
@@ -1537,7 +1554,8 @@ static BOOLEAN bta_av_co_audio_peer_supports_codec(tBTA_AV_CO_PEER *p_peer, UINT
 
 #if (MTK_A2DP_SRC_APTX_CODEC == TRUE) ||(MTK_A2DP_SRC_AAC_CODEC == TRUE)
     bta_av_co_cb.codec_cfg.id = BTIF_AV_CODEC_SBC;
-    if (A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&btif_av_sbc_default_config, bta_av_co_cb.codec_cfg.info) != A2D_SUCCESS)
+    if (bta_av_co_cb.codec_cfg_setconfig.id == BTIF_AV_CODEC_NONE &&
+            A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&btif_av_sbc_default_config, bta_av_co_cb.codec_cfg.info) != A2D_SUCCESS)
     {
         APPL_TRACE_ERROR("bta_av_co_audio_peer_supports_codec A2D_BldSbcInfo failed");
     }
@@ -1942,6 +1960,11 @@ BOOLEAN bta_av_co_audio_set_codec(const tBTIF_AV_MEDIA_FEEDINGS *p_feeding, tBTI
         break;
     }
 
+#if (MTK_COMMON == TRUE)
+    /* It does not make sense to always reset current as default configuration.
+        If current configure is set by remote, it is unnecessary to reset it. */
+    if (bta_av_co_cb.codec_cfg_setconfig.id == BTIF_AV_CODEC_NONE)
+#endif
     /* The new config was correctly built */
 //    bta_av_co_cb.codec_cfg = new_cfg;
     memcpy(&bta_av_co_cb.codec_cfg, &new_cfg, sizeof(tBTIF_AV_CODEC_INFO));

@@ -133,7 +133,7 @@ status_t ForceUnmount(const std::string& path) {
        sprintf(storage_path, "/storage/%s", cpath + strlen("/mnt/runtime/write/"));
     }
     if(*storage_path) {
-       PLOG(VERBOSE) << "storage_path: " << storage_path;
+       LOG(VERBOSE) << __FUNCTION__ << ": path=" << path << ", storage_path=" << storage_path;
     }
 
     if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {

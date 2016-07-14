@@ -1142,11 +1142,6 @@ void btif_a2dp_on_stopped(tBTA_AV_SUSPEND *p_av)
     /* request to stop media task  */
     btif_media_task_aa_tx_flush_req();
     btif_media_task_stop_aa_req();
-
-#if (MTK_A2DP_SRC_AAC_CODEC == TRUE)
-    AAC_Encoder_Deinit(btif_media_cb.aacEncoderParams);
-    btif_media_cb.aacEncoderParams.aacEncoder = (HANDLE_AACENCODER) AACENC_INVALID_HANDLE;
-#endif
     /* once stream is fully stopped we will ack back */
 }
 
@@ -1995,12 +1990,16 @@ static void btif_media_task_pcm2sbc_init(tBTIF_MEDIA_INIT_AUDIO_FEEDING * p_feed
     }
 
     /* Some AV Headsets do not support Mono => always ask for Stereo */
-    if (btif_media_cb.encoder.s16ChannelMode == SBC_MONO)
+#if (MTK_COMMON == TRUE)
+    /* encoder init parameters shall based on current configure negoticiated by AVDTP, rather than
+        modify it at last minute of encoder parameter setup. */
+    /*if (btif_media_cb.encoder.s16ChannelMode == SBC_MONO)
     {
         APPL_TRACE_DEBUG("SBC Reconfiguration needed in Stereo");
         btif_media_cb.encoder.s16ChannelMode = SBC_JOINT_STEREO;
         reconfig_needed = TRUE;
-    }
+    }*/
+#endif
 
     if (reconfig_needed != FALSE)
     {
@@ -2526,6 +2525,11 @@ static void btif_media_task_aa_stop_tx(void)
 
     /* Reset the media feeding state */
     btif_media_task_feeding_state_reset();
+
+#if (MTK_A2DP_SRC_AAC_CODEC == TRUE)
+    AAC_Encoder_Deinit(btif_media_cb.aacEncoderParams);
+    btif_media_cb.aacEncoderParams.aacEncoder = (HANDLE_AACENCODER) AACENC_INVALID_HANDLE;
+#endif
 }
 
 /*******************************************************************************
